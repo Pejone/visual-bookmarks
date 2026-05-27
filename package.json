@@ -1,16 +1,17 @@
 {
-  "name": "Pejolibri",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "dependencies": {
-    "open-graph-scraper": "^6.11.0"
-  }
+  "short_name": "Pejobrili",
+  "name": "Pejobrili - Visual Bookmarks",
+  "icons": [
+    {
+      "src": "icon.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#111827",
+  "theme_color": "#7c3aed",
+  "display": "standalone",
+  "orientation": "portrait"
 }
