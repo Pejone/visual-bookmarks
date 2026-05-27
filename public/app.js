@@ -281,66 +281,60 @@ async function loadPreview(card, url) {
   const placeholderImg = card.querySelector('.placeholder-img');
   const descText = card.querySelector('.desc-text');
   const titleText = card.querySelector('.bm-title');
-  const defaultImage = 'https://images.unsplash.com/photo-1594729187302-3c829e92ff0e?w=500&auto=format&fit=crop&q=60';
   
   try {
     const res = await fetch(`/api/preview?url=${encodeURIComponent(url)}`);
     const data = await res.json();
     
+    // Aggiorna subito i testi estratti
+    if (data.title && titleText) titleText.textContent = data.title;
+    if (data.description && descText) descText.textContent = data.description;
+    
     if (placeholderImg) {
+      // Se l'API non trova proprio nessuna immagine, genera subito il box grafico locale
+      if (!data.image || data.image.trim() === '') {
+        creaPlaceholderStiloso(placeholderImg, data.title || url);
+        return;
+      }
+
       const img = document.createElement('img');
       img.alt = data.title || 'Anteprima';
       img.className = 'w-full h-40 object-cover';
       
-      // 1. PRIMA CONFIGURIAMO IL PARACADUTE ONERROR
+      // PARACADUTE CLIENT-SIDE: Se l'immagine restituisce un errore di caricamento (es. blocco 403 o 404),
+      // viene sostituita all'istante con il box CSS colorato con le iniziali del sito.
       img.onerror = function() {
-        console.log("Immagine corrotta intercettata. Applico il fallback.");
-        this.onerror = null;
-        this.src = defaultImage;
+        console.log("Immagine corrotta o protetta intercettata per:", url);
+        creaPlaceholderStiloso(this, data.title || url);
       };
       
-      // 2. LOGICA DI PULIZIA E CONVERSIONE IN HTTPS
-      let finalImageUrl = defaultImage;
+      // Pulizia e normalizzazione URL in HTTPS per evitare i blocchi di sicurezza dei browser
+      let cleanUrl = data.image.trim();
+      if (cleanUrl.startsWith('//')) cleanUrl = 'https:' + cleanUrl;
+      if (cleanUrl.startsWith('http://')) cleanUrl = cleanUrl.replace('http://', 'https://');
       
-      if (data.image && typeof data.image === 'string' && data.image.trim() !== '') {
-        let cleanUrl = data.image.trim();
-        
-        // Gestisce i link relativi di tipo "//cdn.sito.com/img.jpg"
-        if (cleanUrl.startsWith('//')) {
-          cleanUrl = 'https:' + cleanUrl;
-        }
-        // Forza l'HTTPS se il sito restituisce un link HTTP non sicuro (evita blocchi del browser)
-        else if (cleanUrl.startsWith('http://')) {
-          cleanUrl = cleanUrl.replace('http://', 'https://');
-        }
-        
-        if (cleanUrl.startsWith('https://')) {
-          finalImageUrl = cleanUrl;
-        }
-      }
-      
-      // 3. ASSEGNAZIONE FINALE DELLA SORGENTE
-      img.src = finalImageUrl;
+      img.src = cleanUrl;
       placeholderImg.replaceWith(img);
     }
     
-    if (data.title && titleText) {
-      titleText.textContent = data.title;
-    }
-    
-    if (data.description && descText) {
-      descText.textContent = data.description;
-    }
   } catch (err) {
     console.error("Errore nella generazione della preview:", err);
     if (placeholderImg) {
-      const img = document.createElement('img');
-      img.src = defaultImage;
-      img.alt = 'Anteprima non disponibile';
-      img.className = 'w-full h-40 object-cover';
-      placeholderImg.replaceWith(img);
+      creaPlaceholderStiloso(placeholderImg, url);
     }
   }
+}
+
+// FUNZIONE DI SUPPORTO: Sostituisce l'elemento con un box sfumato CSS e le iniziali del sito
+function creaPlaceholderStiloso(elementoDaSostituire, testo) {
+  const box = document.createElement('div');
+  box.className = 'w-full h-40 bg-gradient-to-br from-violet-600 to-indigo-900 flex items-center justify-center text-white font-bold text-3xl uppercase tracking-wider select-none border-b border-gray-700';
+  
+  // Pulisce l'URL per estrarre le iniziali pulite del dominio in mancanza di un titolo valido
+  const pulito = testo.replace(/^https?:\/\/(www\.)?/, '');
+  box.textContent = pulito.substring(0, 2);
+  
+  elementoDaSostituire.replaceWith(box);
 }
 
 // ==========================================
