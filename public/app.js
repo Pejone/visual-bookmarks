@@ -108,7 +108,6 @@ function mergeAndSaveBookmarks(newLinks) {
   currentBookmarks = [...uniqueNewLinks, ...currentBookmarks];
   localStorage.setItem('my_bookmarks', JSON.stringify(currentBookmarks));
   
-  // Se l'utente sta cercando qualcosa, aggiorna mantenendo il filtro grafico attivo
   if (searchInput && searchInput.value) {
     searchInput.dispatchEvent(new Event('input'));
   } else {
@@ -164,7 +163,7 @@ if (clearAllBtn) {
     if (confirmClear) {
       currentBookmarks = [];
       localStorage.removeItem('my_bookmarks');
-      if (searchInput) searchInput.value = ''; // Svuota l'input grafico della ricerca
+      if (searchInput) searchInput.value = '';
       renderBookmarks(currentBookmarks);
     }
   });
@@ -182,7 +181,6 @@ function renderBookmarks(bookmarks) {
     return;
   }
 
-  // OBSERVER INDIPENDENTE DAL LAYOUT (Monitora l'intero Viewport del browser)
   const observer = new IntersectionObserver((entries, observer) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -245,7 +243,6 @@ if (bookmarksGrid) {
       
       localStorage.setItem('my_bookmarks', JSON.stringify(currentBookmarks));
       
-      // Mantiene il filtro di ricerca attivo anche dopo aver eliminato una card
       if (searchInput && searchInput.value) {
         searchInput.dispatchEvent(new Event('input'));
       } else {
@@ -284,6 +281,7 @@ async function loadPreview(card, url) {
   const placeholderImg = card.querySelector('.placeholder-img');
   const descText = card.querySelector('.desc-text');
   const titleText = card.querySelector('.bm-title');
+  const defaultImage = 'https://images.unsplash.com/photo-1594729187302-3c829e92ff0e?w=500&auto=format&fit=crop&q=60';
   
   try {
     const res = await fetch(`/api/preview?url=${encodeURIComponent(url)}`);
@@ -292,13 +290,19 @@ async function loadPreview(card, url) {
     if (placeholderImg) {
       const img = document.createElement('img');
       
-      // Controllo robusto: se data.image è indefinito, nullo o una stringa vuota, usa il fallback
-      img.src = (data.image && data.image.trim() !== '') 
-        ? data.image 
-        : 'https://images.unsplash.com/photo-1594729187302-3c829e92ff0e?w=500&auto=format&fit=crop&q=60';
-        
+      // Controllo iniziale sulla stringa vuota
+      img.src = (data.image && data.image.trim() !== '') ? data.image : defaultImage;
       img.alt = data.title || 'Anteprima';
       img.className = 'w-full h-40 object-cover';
+      
+      // SCUDO ANTICRASH LATO CLIENT
+      // Se il link sembrava valido ma il browser dà errore 404/hotlink a caricamento iniziato,
+      // intercettiamo l'evento e forziamo l'immagine Unsplash.
+      img.onerror = function() {
+        this.onerror = null; // Evita loop infiniti
+        this.src = defaultImage;
+      };
+
       placeholderImg.replaceWith(img);
     }
     
@@ -313,7 +317,7 @@ async function loadPreview(card, url) {
     console.error("Errore nella generazione della preview:", err);
     if (placeholderImg) {
       const img = document.createElement('img');
-      img.src = 'https://images.unsplash.com/photo-1594729187302-3c829e92ff0e?w=500&auto=format&fit=crop&q=60';
+      img.src = defaultImage;
       img.alt = 'Anteprima non disponibile';
       img.className = 'w-full h-40 object-cover';
       placeholderImg.replaceWith(img);
