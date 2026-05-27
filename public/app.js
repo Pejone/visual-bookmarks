@@ -181,7 +181,7 @@ window.deleteBookmark = (index) => {
 };
 
 // ==========================================
-// RENDERING DELLE CARD E APIS (LAZY LOADING)
+// RENDERING DELLE CARD E CONTROLLO CLICK (X)
 // ==========================================
 function renderBookmarks(bookmarks) {
   bookmarksGrid.innerHTML = '';
@@ -202,15 +202,20 @@ function renderBookmarks(bookmarks) {
     });
   }, { rootMargin: '100px' });
 
-  bookmarks.forEach((bm, index) => {
+  bookmarks.forEach((bm) => {
+    // Generiamo un ID univoco se non esiste già (serve per la cancellazione sicura)
+    if (!bm.id) {
+      bm.id = 'bm_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    }
+
     const card = document.createElement('div');
     card.className = 'relative group bookmark-card block bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700 transition hover:scale-[1.02]';
     card.dataset.url = bm.url;
 
-    // MODIFICA QUI: Struttura modificata per separare nettamente il tasto e impedire conflitti di click
+    // Nota: Ho aggiunto la classe 'btn-delete' e l'attributo data-id al bottone
     card.innerHTML = `
-      <button class="absolute top-2 right-2 z-30 bg-red-600 hover:bg-red-500 text-white w-8 h-8 rounded-full shadow-lg flex items-center justify-center transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 font-bold cursor-pointer" 
-              data-index="${index}">
+      <button class="btn-delete absolute top-2 right-2 z-30 bg-red-600 hover:bg-red-500 text-white w-8 h-8 rounded-full shadow-lg flex items-center justify-center transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 font-bold cursor-pointer" 
+              data-id="${bm.id}">
         ✕
       </button>
       <a href="${bm.url}" target="_blank" class="block relative z-10">
@@ -225,19 +230,36 @@ function renderBookmarks(bookmarks) {
       </a>
     `;
     
-    // Agganciamo l'evento click direttamente tramite JavaScript (più sicuro su mobile rispetto a onclick)
-    const deleteBtn = card.querySelector('button');
-    deleteBtn.addEventListener('click', (e) => {
-      e.preventDefault();  // Blocca l'apertura del link di sotto
-      e.stopPropagation(); // Impedisce al click di propagarsi alla card
-      const idx = parseInt(deleteBtn.dataset.index);
-      window.deleteBookmark(idx);
-    });
-
     bookmarksGrid.appendChild(card);
     observer.observe(card);
   });
+
+  // Salva l'array con gli ID appena generati (se erano assenti) senza ridisegnare
+  localStorage.setItem('my_bookmarks', JSON.stringify(currentBookmarks));
 }
+
+// ==========================================
+// DELEGAMENTO DEGLI EVENTI SULLA GRIGLIA (BLINDATO)
+// ==========================================
+// Ascoltiamo i click su TUTTA la griglia. Se il click intercetta il tasto "X", lo gestisce prima del link.
+bookmarksGrid.addEventListener('click', (e) => {
+  // Controlliamo se l'elemento cliccato è il bottone "X" o se ci siamo andati molto vicino
+  const deleteBtn = e.target.closest('.btn-delete');
+  
+  if (deleteBtn) {
+    e.preventDefault();  // Blocca l'apertura del link di sotto
+    e.stopPropagation(); // Impedisce al click di risalire verso l'alto
+    
+    const idDaCancellare = deleteBtn.dataset.id;
+    
+    // Filtriamo l'array tenendo solo i segnalibri che NON hanno quell'ID
+    currentBookmarks = currentBookmarks.filter(bm => bm.id !== idDaCancellare);
+    
+    // Salviamo e aggiorniamo lo schermo
+    localStorage.setItem('my_bookmarks', JSON.stringify(currentBookmarks));
+    renderBookmarks(currentBookmarks);
+  }
+});
 
 // Chiamata asincrona alla serverless function di Vercel per recuperare i metadati
 async function loadPreview(card, url) {
