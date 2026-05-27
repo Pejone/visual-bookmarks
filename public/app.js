@@ -292,15 +292,35 @@ async function loadPreview(card, url) {
       img.alt = data.title || 'Anteprima';
       img.className = 'w-full h-40 object-cover';
       
-      // 1. CONFIGURIAMO PRIMA L'EVENTO DI ERRORE (IL PARACADUTE)
+      // 1. PRIMA CONFIGURIAMO IL PARACADUTE ONERROR
       img.onerror = function() {
-        this.onerror = null; // Evita loop infiniti
+        console.log("Immagine corrotta intercettata. Applico il fallback.");
+        this.onerror = null;
         this.src = defaultImage;
       };
       
-      // 2. SOLO ORA ASSEGNIAMO LA SORGENTE (L'ORDINE È FONDAMENTALE!)
-      img.src = (data.image && data.image.trim() !== '') ? data.image : defaultImage;
-
+      // 2. LOGICA DI PULIZIA E CONVERSIONE IN HTTPS
+      let finalImageUrl = defaultImage;
+      
+      if (data.image && typeof data.image === 'string' && data.image.trim() !== '') {
+        let cleanUrl = data.image.trim();
+        
+        // Gestisce i link relativi di tipo "//cdn.sito.com/img.jpg"
+        if (cleanUrl.startsWith('//')) {
+          cleanUrl = 'https:' + cleanUrl;
+        }
+        // Forza l'HTTPS se il sito restituisce un link HTTP non sicuro (evita blocchi del browser)
+        else if (cleanUrl.startsWith('http://')) {
+          cleanUrl = cleanUrl.replace('http://', 'https://');
+        }
+        
+        if (cleanUrl.startsWith('https://')) {
+          finalImageUrl = cleanUrl;
+        }
+      }
+      
+      // 3. ASSEGNAZIONE FINALE DELLA SORGENTE
+      img.src = finalImageUrl;
       placeholderImg.replaceWith(img);
     }
     
