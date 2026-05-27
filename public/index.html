@@ -3,18 +3,44 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Anteprima Segnabrili pejosi</title>
+  <title>Anteprima Segnalibri</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen p-4">
 
-  <header class="max-w-4xl mx-auto mb-8 text-center">
-    <h1 class="text-3xl font-bold mb-4">Pejobrili</h1>
-    <!-- Input per caricare il file HTML esportato dal browser -->
-    <input type="file" id="fileInput" accept=".html" class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-600 file:text-white hover:file:bg-violet-700 cursor-pointer"/>
+  <header class="max-w-4xl mx-auto mb-8 bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-xl">
+    <h1 class="text-3xl font-bold mb-6 text-center text-violet-400">I Miei Segnalibri</h1>
+    
+    <!-- SWITCH / TAB SELECTOR -->
+    <div class="flex bg-gray-900 p-1 rounded-xl max-w-md mx-auto mb-6 border border-gray-700">
+      <button id="tabHtml" class="flex-1 py-2 text-sm font-medium rounded-lg bg-violet-600 text-white transition-all duration-200 shadow-md">
+        📄 File HTML
+      </button>
+      <button id="tabText" class="flex-1 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-gray-200 transition-all duration-200">
+        🔗 Incolla Link
+      </button>
+    </div>
+    
+    <!-- SEZIONI DI INPUT -->
+    <div class="max-w-xl mx-auto">
+      <!-- Metodo A: Caricamento File HTML (Attivo di default) -->
+      <div id="sectionHtml" class="space-y-2 transition-all duration-300">
+        <label class="block text-sm font-medium text-gray-300">Importa il file dei Segnalibri generato dal browser</label>
+        <input type="file" id="fileInput" accept=".html" class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-600 file:text-white hover:file:bg-violet-700 cursor-pointer"/>
+      </div>
+
+      <!-- Metodo B: Incolla Testo/Link (Nascosto di default con 'hidden') -->
+      <div id="sectionText" class="space-y-2 hidden transition-all duration-300">
+        <label class="block text-sm font-medium text-gray-300">Incolla qui il testo o i link copiati da Chrome</label>
+        <div class="flex gap-2">
+          <textarea id="bulkLinksInput" rows="1" placeholder="Trascina o incolla i tuoi link qui..." class="w-full bg-gray-900 text-sm rounded-lg border border-gray-700 p-2.5 text-gray-100 focus:ring-violet-500 focus:border-violet-500 placeholder-gray-500 resize-none"></textarea>
+          <button id="addLinksBtn" class="bg-violet-600 hover:bg-violet-700 text-white font-medium text-sm px-4 rounded-lg transition whitespace-nowrap">Aggiungi</button>
+        </div>
+      </div>
+    </div>
   </header>
 
-  <!-- Griglia dove compariranno le card -->
+  <!-- Griglia delle card -->
   <main id="bookmarksGrid" class="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
     <!-- Le card verranno iniettate qui da JavaScript -->
   </main>
