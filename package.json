@@ -1,17 +1,10 @@
 {
-  "short_name": "Pejobrili",
-  "name": "Pejobrili - Visual Bookmarks",
-  "icons": [
-    {
-      "src": "icon.png",
-      "type": "image/png",
-      "sizes": "512x512",
-      "purpose": "any maskable"
-    }
-  ],
-  "start_url": "/",
-  "background_color": "#111827",
-  "theme_color": "#7c3aed",
-  "display": "standalone",
-  "orientation": "portrait"
+  "name": "pejobrili",
+  "version": "1.0.0",
+  "description": "Visual Bookmarks PWA",
+  "main": "api/preview.js",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12"
+  }
 }
