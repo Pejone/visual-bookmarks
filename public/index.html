@@ -24,7 +24,9 @@
           🗑️ Svuota tutto
         </button>
       </div>
-    </div> <div class="flex bg-gray-900 p-1 rounded-xl max-w-md mx-auto mb-6 border border-gray-700">
+    </div>
+    
+    <div class="flex bg-gray-900 p-1 rounded-xl max-w-md mx-auto mb-6 border border-gray-700">
       <button id="tabHtml" class="flex-1 py-2 text-sm font-medium rounded-lg bg-violet-600 text-white transition-all duration-200 shadow-md cursor-pointer">
         📄 File HTML
       </button>
@@ -49,19 +51,16 @@
     </div>
   </header>
 
-  <!-- GRIGLIA PRINCIPALE E RICERCA -->
   <main class="max-w-4xl mx-auto">
     
-    <!-- BARRA DI RICERCA CONTESTUALE -->
     <div class="mb-6 max-w-md mx-auto sm:mx-0">
       <div class="relative">
-        <input type="text" id="searchInput" placeholder="🔍 Cerca nei segnalibri (es. Medium, GitHub...)" class="w-full bg-gray-850 text-sm rounded-xl border border-gray-700 p-3 pl-10 text-gray-100 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent placeholder-gray-500 bg-gray-800 transition shadow-inner">
+        <input type="text" id="searchInput" placeholder="🔍 Cerca nei segnalibri (es. Medium, GitHub...)" class="w-full bg-gray-800 text-sm rounded-xl border border-gray-700 p-3 pl-10 text-gray-100 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent placeholder-gray-500 transition shadow-inner">
       </div>
     </div>
 
     <div id="bookmarksGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-      <!-- Le card verranno iniettate qui da JavaScript -->
-    </div>
+      </div>
   </main>
 
   <script src="app.js"></script>

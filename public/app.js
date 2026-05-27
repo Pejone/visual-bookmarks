@@ -11,8 +11,8 @@ const bulkLinksInput = document.getElementById('bulkLinksInput');
 const addLinksBtn = document.getElementById('addLinksBtn');
 const exportBtn = document.getElementById('exportBtn');
 const clearAllBtn = document.getElementById('clearAllBtn');
-const bookmarksGrid = document.getElementById('bookmarksGrid');
 const searchInput = document.getElementById('searchInput');
+const bookmarksGrid = document.getElementById('bookmarksGrid');
 
 // Array globale che tiene in memoria i segnalibri correnti
 let currentBookmarks = [];
@@ -22,15 +22,15 @@ let currentBookmarks = [];
 // ==========================================
 if (tabHtml && tabText && sectionHtml && sectionText) {
   tabHtml.addEventListener('click', () => {
-    tabHtml.className = 'flex-1 py-2 text-sm font-medium rounded-lg bg-violet-600 text-white transition-all duration-200 shadow-md';
-    tabText.className = 'flex-1 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-gray-200 transition-all duration-200';
+    tabHtml.className = 'flex-1 py-2 text-sm font-medium rounded-lg bg-violet-600 text-white transition-all duration-200 shadow-md cursor-pointer';
+    tabText.className = 'flex-1 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-gray-200 transition-all duration-200 cursor-pointer';
     sectionHtml.classList.remove('hidden');
     sectionText.classList.add('hidden');
   });
 
   tabText.addEventListener('click', () => {
-    tabText.className = 'flex-1 py-2 text-sm font-medium rounded-lg bg-violet-600 text-white transition-all duration-200 shadow-md';
-    tabHtml.className = 'flex-1 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-gray-200 transition-all duration-200';
+    tabText.className = 'flex-1 py-2 text-sm font-medium rounded-lg bg-violet-600 text-white transition-all duration-200 shadow-md cursor-pointer';
+    tabHtml.className = 'flex-1 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-gray-200 transition-all duration-200 cursor-pointer';
     sectionText.classList.remove('hidden');
     sectionHtml.classList.add('hidden');
   });
@@ -107,7 +107,13 @@ function mergeAndSaveBookmarks(newLinks) {
 
   currentBookmarks = [...uniqueNewLinks, ...currentBookmarks];
   localStorage.setItem('my_bookmarks', JSON.stringify(currentBookmarks));
-  renderBookmarks(currentBookmarks);
+  
+  // Se l'utente sta cercando qualcosa, aggiorna mantenendo il filtro
+  if (searchInput && searchInput.value) {
+    searchInput.dispatchEvent(new Event('input'));
+  } else {
+    renderBookmarks(currentBookmarks);
+  }
 }
 
 // ==========================================
@@ -158,23 +164,25 @@ if (clearAllBtn) {
     if (confirmClear) {
       currentBookmarks = [];
       localStorage.removeItem('my_bookmarks');
+      if (searchInput) searchInput.value = ''; // Svuota l'input grafico
       renderBookmarks(currentBookmarks);
     }
   });
 }
 
 // ==========================================
-// RENDERING DELLE CARD E APIS (LAZY LOADING)
+// RENDERING DELLE CARD E INTERSECTION OBSERVER
 // ==========================================
 function renderBookmarks(bookmarks) {
   if (!bookmarksGrid) return;
   bookmarksGrid.innerHTML = '';
   
   if (bookmarks.length === 0) {
-    bookmarksGrid.innerHTML = '<p class="text-center text-gray-500 col-span-full py-8">Nessun segnalibro salvato. Scegli un metodo in alto per iniziare!</p>';
+    bookmarksGrid.innerHTML = '<p class="text-center text-gray-500 col-span-full py-8">Nessun segnalibro trovato.</p>';
     return;
   }
 
+  // OBSERVER INDIPENDENTE DAL LAYOUT (Gira sul Viewport globale)
   const observer = new IntersectionObserver((entries, observer) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -184,7 +192,10 @@ function renderBookmarks(bookmarks) {
         observer.unobserve(card);
       }
     });
-  }, { rootMargin: '100px' });
+  }, { 
+    root: null, 
+    rootMargin: '200px' 
+  });
 
   bookmarks.forEach((bm) => {
     if (!bm.id) {
@@ -195,7 +206,6 @@ function renderBookmarks(bookmarks) {
     card.className = 'relative bookmark-card block bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700 transition hover:scale-[1.02]';
     card.dataset.url = bm.url;
 
-    // STRUTTURA BLINDATA: Il tag <a> non avvolge più la crocetta. Sono elementi indipendenti.
     card.innerHTML = `
       <a href="${bm.url}" target="_blank" class="block w-full h-full">
         <div class="w-full h-40 bg-gray-700 animate-pulse flex items-center justify-center text-gray-400 text-sm placeholder-img">
@@ -217,8 +227,6 @@ function renderBookmarks(bookmarks) {
     bookmarksGrid.appendChild(card);
     observer.observe(card);
   });
-
-  localStorage.setItem('my_bookmarks', JSON.stringify(currentBookmarks));
 }
 
 // ==========================================
@@ -236,12 +244,42 @@ if (bookmarksGrid) {
       currentBookmarks = currentBookmarks.filter(bm => bm.id !== idDaCancellare);
       
       localStorage.setItem('my_bookmarks', JSON.stringify(currentBookmarks));
-      renderBookmarks(currentBookmarks);
+      
+      // Mantiene il filtro di ricerca attivo anche dopo aver eliminato una card
+      if (searchInput && searchInput.value) {
+        searchInput.dispatchEvent(new Event('input'));
+      } else {
+        renderBookmarks(currentBookmarks);
+      }
     }
   });
 }
 
-// Chiamata asincrona alla serverless function di Vercel per recuperare i metadati
+// ==========================================
+// FUNZIONE DI FILTRO / RICERCA IN REAL-TIME
+// ==========================================
+if (searchInput) {
+  searchInput.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase().trim();
+    
+    if (!query) {
+      renderBookmarks(currentBookmarks);
+      return;
+    }
+    
+    const filtered = currentBookmarks.filter(bm => {
+      const titleMatch = bm.title ? bm.title.toLowerCase().includes(query) : false;
+      const urlMatch = bm.url ? bm.url.toLowerCase().includes(query) : false;
+      return titleMatch || urlMatch;
+    });
+    
+    renderBookmarks(filtered);
+  });
+}
+
+// ==========================================
+// CHIAMATA API SERVERLESS PER METADATI
+// ==========================================
 async function loadPreview(card, url) {
   const placeholderImg = card.querySelector('.placeholder-img');
   const descText = card.querySelector('.desc-text');
@@ -274,31 +312,6 @@ async function loadPreview(card, url) {
       placeholderImg.classList.add('bg-gray-700');
     }
   }
-}
-
-// ==========================================
-// FUNZIONE DI FILTRO / RICERCA IN REAL-TIME
-// ==========================================
-if (searchInput) {
-  searchInput.addEventListener('input', (e) => {
-    const query = e.target.value.toLowerCase().trim();
-    
-    // Se la barra è vuota, mostra tutto normalmente
-    if (!query) {
-      renderBookmarks(currentBookmarks);
-      return;
-    }
-    
-    // Filtriamo l'array controllando se il testo è nel titolo o nel link
-    const filtered = currentBookmarks.filter(bm => {
-      const titleMatch = bm.title ? bm.title.toLowerCase().includes(query) : false;
-      const urlMatch = bm.url ? bm.url.toLowerCase().includes(query) : false;
-      return titleMatch || urlMatch;
-    });
-    
-    // Mostriamo solo i risultati filtrati (senza toccare il localStorage!)
-    renderBookmarks(filtered);
-  });
 }
 
 // ==========================================
