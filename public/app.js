@@ -1,14 +1,11 @@
 // ==========================================
 // SELEZIONE ELEMENTI DEL DOM
 // ==========================================
-
-// Elementi dello Switch (Tab)
 const tabHtml = document.getElementById('tabHtml');
 const tabText = document.getElementById('tabText');
 const sectionHtml = document.getElementById('sectionHtml');
 const sectionText = document.getElementById('sectionText');
 
-// Elementi di Input, Bottoni e Griglia
 const fileInput = document.getElementById('fileInput');
 const bulkLinksInput = document.getElementById('bulkLinksInput');
 const addLinksBtn = document.getElementById('addLinksBtn');
@@ -20,7 +17,7 @@ const bookmarksGrid = document.getElementById('bookmarksGrid');
 let currentBookmarks = [];
 
 // ==========================================
-// GESTIONE DELLO SWITCH GRAPHICO (TAB)
+// GESTIONE DELLO SWITCH GRAFICO (TAB)
 // ==========================================
 if (tabHtml && tabText && sectionHtml && sectionText) {
   tabHtml.addEventListener('click', () => {
@@ -41,8 +38,6 @@ if (tabHtml && tabText && sectionHtml && sectionText) {
 // ==========================================
 // CARICAMENTO INIZIALE E CONFIGURAZIONE DATA
 // ==========================================
-
-// Si attiva all'apertura dell'applicazione
 document.addEventListener('DOMContentLoaded', () => {
   const saved = localStorage.getItem('my_bookmarks');
   if (saved) {
@@ -51,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Metodo A: Gestione caricamento file HTML (esportato da Chrome/Takeout)
+// Metodo A: Gestione caricamento file HTML
 fileInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -64,49 +59,47 @@ fileInput.addEventListener('change', (e) => {
     const links = doc.querySelectorAll('a');
     
     const newBookmarks = Array.from(links).map(link => ({
+      id: 'bm_' + Date.now() + '_' + Math.floor(Math.random() * 100000),
       title: link.textContent || link.href,
       url: link.href
     }));
 
     mergeAndSaveBookmarks(newBookmarks);
-    fileInput.value = ''; // Resetta l'input file per futuri caricamenti
+    fileInput.value = '';
   };
   reader.readAsText(file);
 });
 
-// Metodo B: Gestione inserimento a blocchi (Incolla Link o schede di Chrome)
+// Metodo B: Gestione inserimento manuale (Incolla Link)
 addLinksBtn.addEventListener('click', () => {
   const text = bulkLinksInput.value.trim();
   if (!text) return;
 
-  // Regex avanzata per catturare tutti gli URL validi nel testo
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   const foundUrls = text.match(urlRegex);
 
   if (foundUrls && foundUrls.length > 0) {
     const newBookmarks = foundUrls.map(url => {
-      // Pulisce l'URL da punteggiatura finale involontaria derivata dal testo
       const cleanUrl = url.replace(/[),.;]$/, '');
       return {
-        title: cleanUrl.replace(/^https?:\/\/(www\.)?/, ''), // Titolo provvisorio basato sull'URL
+        id: 'bm_' + Date.now() + '_' + Math.floor(Math.random() * 100000),
+        title: cleanUrl.replace(/^https?:\/\/(www\.)?/, ''),
         url: cleanUrl
       };
     });
 
     mergeAndSaveBookmarks(newBookmarks);
-    bulkLinksInput.value = ''; // Svuota l'area di testo
+    bulkLinksInput.value = '';
   } else {
     alert("Nessun link valido trovato nel testo inserito!");
   }
 });
 
-// Unisce la vecchia lista alla nuova evitando duplicati e salvando in locale
 function mergeAndSaveBookmarks(newLinks) {
   const uniqueNewLinks = newLinks.filter(newBm => 
     !currentBookmarks.some(oldBm => oldBm.url === newBm.url)
   );
 
-  // Mette i nuovi inserimenti in cima alla griglia per vederli subito
   currentBookmarks = [...uniqueNewLinks, ...currentBookmarks];
   localStorage.setItem('my_bookmarks', JSON.stringify(currentBookmarks));
   renderBookmarks(currentBookmarks);
@@ -115,21 +108,17 @@ function mergeAndSaveBookmarks(newLinks) {
 // ==========================================
 // AZIONI GENERALI (ESPORTA E SVUOTA)
 // ==========================================
-
-// Pulsante per esportare la lista corrente/modificata in formato HTML standard
 exportBtn.addEventListener('click', () => {
   if (currentBookmarks.length === 0) {
     alert("Non ci sono segnalibri da esportare!");
     return;
   }
 
-  // Costruzione del file HTML secondo lo standard Netscape (riconosciuto da tutti i browser)
   let htmlContent = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
 <TITLE>Bookmarks</TITLE>
 <H1>Bookmarks</H1>
-<DL><p>
-`;
+<DL><p>\n`;
 
   currentBookmarks.forEach(bm => {
     htmlContent += `    <DT><A HREF="${bm.url}">${bm.title}</A>\n`;
@@ -137,7 +126,6 @@ exportBtn.addEventListener('click', () => {
 
   htmlContent += `</DL><p>`;
 
-  // Generazione del file virtuale e download forzato dal browser
   const blob = new Blob([htmlContent], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
   
@@ -147,12 +135,10 @@ exportBtn.addEventListener('click', () => {
   document.body.appendChild(a);
   a.click();
   
-  // Pulizia della memoria
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 });
 
-// Pulsante per ripulire completamente lo schermo e svuotare il database locale
 clearAllBtn.addEventListener('click', () => {
   const n = currentBookmarks.length;
   if (n === 0) {
@@ -161,24 +147,12 @@ clearAllBtn.addEventListener('click', () => {
   }
 
   const confirmClear = confirm(`Sei sicuro di voler cancellare permanentemente tutti i tuoi ${n} segnalibri? L'azione non è annullabile.`);
-  
   if (confirmClear) {
     currentBookmarks = [];
     localStorage.removeItem('my_bookmarks');
     renderBookmarks(currentBookmarks);
   }
 });
-
-// ==========================================
-// GESTIONE CANCELLAZIONE SINGOLO LINK (X)
-// ==========================================
-
-// Definita sull'oggetto window per renderla accessibile dall'attributo "onclick" delle card generate
-window.deleteBookmark = (index) => {
-  currentBookmarks.splice(index, 1);
-  localStorage.setItem('my_bookmarks', JSON.stringify(currentBookmarks));
-  renderBookmarks(currentBookmarks);
-};
 
 // ==========================================
 // RENDERING DELLE CARD E CONTROLLO CLICK (X)
@@ -203,18 +177,17 @@ function renderBookmarks(bookmarks) {
   }, { rootMargin: '100px' });
 
   bookmarks.forEach((bm) => {
-    // Generiamo un ID univoco se non esiste già (serve per la cancellazione sicura)
+    // Generiamo l'ID al volo se l'elemento vecchio salvato in precedenza non lo possiede
     if (!bm.id) {
-      bm.id = 'bm_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+      bm.id = 'bm_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
     }
 
     const card = document.createElement('div');
     card.className = 'relative group bookmark-card block bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700 transition hover:scale-[1.02]';
     card.dataset.url = bm.url;
 
-    // Nota: Ho aggiunto la classe 'btn-delete' e l'attributo data-id al bottone
     card.innerHTML = `
-      <button class="btn-delete absolute top-2 right-2 z-30 bg-red-600 hover:bg-red-500 text-white w-8 h-8 rounded-full shadow-lg flex items-center justify-center transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 font-bold cursor-pointer" 
+      <button class="btn-delete absolute top-2 right-2 z-30 bg-red-600 hover:bg-red-500 text-white w-8 h-8 rounded-full shadow-lg flex items-center justify-center transition-all opacity-100 font-bold cursor-pointer" 
               data-id="${bm.id}">
         ✕
       </button>
@@ -234,28 +207,21 @@ function renderBookmarks(bookmarks) {
     observer.observe(card);
   });
 
-  // Salva l'array con gli ID appena generati (se erano assenti) senza ridisegnare
+  // Aggiorna il localStorage con gli ID appena generati
   localStorage.setItem('my_bookmarks', JSON.stringify(currentBookmarks));
 }
 
-// ==========================================
-// DELEGAMENTO DEGLI EVENTI SULLA GRIGLIA (BLINDATO)
-// ==========================================
-// Ascoltiamo i click su TUTTA la griglia. Se il click intercetta il tasto "X", lo gestisce prima del link.
+// Intercettiamo i click su tutta la griglia
 bookmarksGrid.addEventListener('click', (e) => {
-  // Controlliamo se l'elemento cliccato è il bottone "X" o se ci siamo andati molto vicino
   const deleteBtn = e.target.closest('.btn-delete');
   
   if (deleteBtn) {
-    e.preventDefault();  // Blocca l'apertura del link di sotto
-    e.stopPropagation(); // Impedisce al click di risalire verso l'alto
+    e.preventDefault();
+    e.stopPropagation();
     
     const idDaCancellare = deleteBtn.dataset.id;
-    
-    // Filtriamo l'array tenendo solo i segnalibri che NON hanno quell'ID
     currentBookmarks = currentBookmarks.filter(bm => bm.id !== idDaCancellare);
     
-    // Salviamo e aggiorniamo lo schermo
     localStorage.setItem('my_bookmarks', JSON.stringify(currentBookmarks));
     renderBookmarks(currentBookmarks);
   }
@@ -273,7 +239,6 @@ async function loadPreview(card, url) {
     
     if (placeholderImg) {
       const img = document.createElement('img');
-      // Immagine di fallback astratta se il sito non ha OpenGraph immagini impostate
       img.src = data.image || 'https://images.unsplash.com/photo-1594729187302-3c829e92ff0e?w=500&auto=format&fit=crop&q=60';
       img.alt = data.title || 'Anteprima';
       img.className = 'w-full h-40 object-cover';
@@ -303,7 +268,7 @@ async function loadPreview(card, url) {
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('PWA Service Worker registrato correttamente!', reg))
-      .catch(err => console.error('Errore registrazione Service Worker:', err));
+      .then(reg => console.log('PWA Service Worker registrato!', reg))
+      .catch(err => console.error('Errore SW:', err));
   });
 }
