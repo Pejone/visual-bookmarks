@@ -36,7 +36,7 @@ if (tabHtml && tabText && sectionHtml && sectionText) {
 }
 
 // ==========================================
-// CARICAMENTO INIZIALE E CONFIGURAZIONE DATA
+// CARICAMENTO INIZIALE E CONFIGURAZIONE DATI
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
   const saved = localStorage.getItem('my_bookmarks');
@@ -47,53 +47,57 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Metodo A: Gestione caricamento file HTML
-fileInput.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+if (fileInput) {
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = function(event) {
-    const text = event.target.result;
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(text, 'text/html');
-    const links = doc.querySelectorAll('a');
-    
-    const newBookmarks = Array.from(links).map(link => ({
-      id: 'bm_' + Date.now() + '_' + Math.floor(Math.random() * 100000),
-      title: link.textContent || link.href,
-      url: link.href
-    }));
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const text = event.target.result;
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(text, 'text/html');
+      const links = doc.querySelectorAll('a');
+      
+      const newBookmarks = Array.from(links).map(link => ({
+        id: 'bm_' + Date.now() + '_' + Math.floor(Math.random() * 100000),
+        title: link.textContent || link.href,
+        url: link.href
+      }));
 
-    mergeAndSaveBookmarks(newBookmarks);
-    fileInput.value = '';
-  };
-  reader.readAsText(file);
-});
+      mergeAndSaveBookmarks(newBookmarks);
+      fileInput.value = '';
+    };
+    reader.readAsText(file);
+  });
+}
 
 // Metodo B: Gestione inserimento manuale (Incolla Link)
-addLinksBtn.addEventListener('click', () => {
-  const text = bulkLinksInput.value.trim();
-  if (!text) return;
+if (addLinksBtn) {
+  addLinksBtn.addEventListener('click', () => {
+    const text = bulkLinksInput.value.trim();
+    if (!text) return;
 
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const foundUrls = text.match(urlRegex);
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const foundUrls = text.match(urlRegex);
 
-  if (foundUrls && foundUrls.length > 0) {
-    const newBookmarks = foundUrls.map(url => {
-      const cleanUrl = url.replace(/[),.;]$/, '');
-      return {
-        id: 'bm_' + Date.now() + '_' + Math.floor(Math.random() * 100000),
-        title: cleanUrl.replace(/^https?:\/\/(www\.)?/, ''),
-        url: cleanUrl
-      };
-    });
+    if (foundUrls && foundUrls.length > 0) {
+      const newBookmarks = foundUrls.map(url => {
+        const cleanUrl = url.replace(/[),.;]$/, '');
+        return {
+          id: 'bm_' + Date.now() + '_' + Math.floor(Math.random() * 100000),
+          title: cleanUrl.replace(/^https?:\/\/(www\.)?/, ''),
+          url: cleanUrl
+        };
+      });
 
-    mergeAndSaveBookmarks(newBookmarks);
-    bulkLinksInput.value = '';
-  } else {
-    alert("Nessun link valido trovato nel testo inserito!");
-  }
-});
+      mergeAndSaveBookmarks(newBookmarks);
+      bulkLinksInput.value = '';
+    } else {
+      alert("Nessun link valido trovato nel testo inserito!");
+    }
+  });
+}
 
 function mergeAndSaveBookmarks(newLinks) {
   const uniqueNewLinks = newLinks.filter(newBm => 
@@ -108,56 +112,61 @@ function mergeAndSaveBookmarks(newLinks) {
 // ==========================================
 // AZIONI GENERALI (ESPORTA E SVUOTA)
 // ==========================================
-exportBtn.addEventListener('click', () => {
-  if (currentBookmarks.length === 0) {
-    alert("Non ci sono segnalibri da esportare!");
-    return;
-  }
+if (exportBtn) {
+  exportBtn.addEventListener('click', () => {
+    if (currentBookmarks.length === 0) {
+      alert("Non ci sono segnalibri da esportare!");
+      return;
+    }
 
-  let htmlContent = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
+    let htmlContent = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
 <TITLE>Bookmarks</TITLE>
 <H1>Bookmarks</H1>
 <DL><p>\n`;
 
-  currentBookmarks.forEach(bm => {
-    htmlContent += `    <DT><A HREF="${bm.url}">${bm.title}</A>\n`;
+    currentBookmarks.forEach(bm => {
+      htmlContent += `    <DT><A HREF="${bm.url}">${bm.title}</A>\n`;
+    });
+
+    htmlContent += `</DL><p>`;
+
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'segnalibri_aggiornati.html';
+    document.body.appendChild(a);
+    a.click();
+    
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   });
+}
 
-  htmlContent += `</DL><p>`;
+if (clearAllBtn) {
+  clearAllBtn.addEventListener('click', () => {
+    const n = currentBookmarks.length;
+    if (n === 0) {
+      alert("Non ci sono segnalibri da cancellare!");
+      return;
+    }
 
-  const blob = new Blob([htmlContent], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'segnalibri_aggiornati.html';
-  document.body.appendChild(a);
-  a.click();
-  
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-});
-
-clearAllBtn.addEventListener('click', () => {
-  const n = currentBookmarks.length;
-  if (n === 0) {
-    alert("Non ci sono segnalibri da cancellare!");
-    return;
-  }
-
-  const confirmClear = confirm(`Sei sicuro di voler cancellare permanentemente tutti i tuoi ${n} segnalibri? L'azione non è annullabile.`);
-  if (confirmClear) {
-    currentBookmarks = [];
-    localStorage.removeItem('my_bookmarks');
-    renderBookmarks(currentBookmarks);
-  }
-});
+    const confirmClear = confirm(`Sei sicuro di voler cancellare permanentemente tutti i tuoi ${n} segnalibri? L'azione non è annullabile.`);
+    if (confirmClear) {
+      currentBookmarks = [];
+      localStorage.removeItem('my_bookmarks');
+      renderBookmarks(currentBookmarks);
+    }
+  });
+}
 
 // ==========================================
-// RENDERING DELLE CARD E CONTROLLO CLICK (X)
+// RENDERING DELLE CARD E APIS (LAZY LOADING)
 // ==========================================
 function renderBookmarks(bookmarks) {
+  if (!bookmarksGrid) return;
   bookmarksGrid.innerHTML = '';
   
   if (bookmarks.length === 0) {
@@ -185,15 +194,9 @@ function renderBookmarks(bookmarks) {
     card.className = 'relative bookmark-card block bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700 transition hover:scale-[1.02]';
     card.dataset.url = bm.url;
 
-    // MODIFICA CRUCIALI NELLE CLASSI DEL BOTTONE:
-    // Rimossi 'opacity-100', 'md:opacity-0', ecc. Adesso è un blocco nativo z-50 sempre reattivo.
+    // STRUTTURA BLINDATA: Il tag <a> non avvolge più la crocetta. Sono elementi indipendenti.
     card.innerHTML = `
-      <button class="btn-delete absolute top-2 right-2 z-50 bg-red-600 hover:bg-red-500 text-white w-8 h-8 rounded-full shadow-lg flex items-center justify-center font-bold text-base cursor-pointer" 
-              data-id="${bm.id}" 
-              style="touch-action: manipulation;">
-        ✕
-      </button>
-      <a href="${bm.url}" target="_blank" class="block relative z-10">
+      <a href="${bm.url}" target="_blank" class="block w-full h-full">
         <div class="w-full h-40 bg-gray-700 animate-pulse flex items-center justify-center text-gray-400 text-sm placeholder-img">
           Caricamento...
         </div>
@@ -203,6 +206,11 @@ function renderBookmarks(bookmarks) {
           <p class="text-xs text-gray-500 line-clamp-2 mt-2 desc-text"></p>
         </div>
       </a>
+      <button class="btn-delete absolute top-2 right-2 z-50 bg-red-600 hover:bg-red-500 text-white w-8 h-8 rounded-full shadow-lg flex items-center justify-center font-bold text-base cursor-pointer" 
+              data-id="${bm.id}"
+              style="touch-action: manipulation;">
+        ✕
+      </button>
     `;
     
     bookmarksGrid.appendChild(card);
@@ -210,6 +218,26 @@ function renderBookmarks(bookmarks) {
   });
 
   localStorage.setItem('my_bookmarks', JSON.stringify(currentBookmarks));
+}
+
+// ==========================================
+// INTERCETTAZIONE CLICK SUL TASTO CANCELLA (X)
+// ==========================================
+if (bookmarksGrid) {
+  bookmarksGrid.addEventListener('click', (e) => {
+    const deleteBtn = e.target.closest('.btn-delete');
+    
+    if (deleteBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const idDaCancellare = deleteBtn.dataset.id;
+      currentBookmarks = currentBookmarks.filter(bm => bm.id !== idDaCancellare);
+      
+      localStorage.setItem('my_bookmarks', JSON.stringify(currentBookmarks));
+      renderBookmarks(currentBookmarks);
+    }
+  });
 }
 
 // Chiamata asincrona alla serverless function di Vercel per recuperare i metadati
