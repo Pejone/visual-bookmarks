@@ -289,19 +289,17 @@ async function loadPreview(card, url) {
     
     if (placeholderImg) {
       const img = document.createElement('img');
-      
-      // Controllo iniziale sulla stringa vuota
-      img.src = (data.image && data.image.trim() !== '') ? data.image : defaultImage;
       img.alt = data.title || 'Anteprima';
       img.className = 'w-full h-40 object-cover';
       
-      // SCUDO ANTICRASH LATO CLIENT
-      // Se il link sembrava valido ma il browser dà errore 404/hotlink a caricamento iniziato,
-      // intercettiamo l'evento e forziamo l'immagine Unsplash.
+      // 1. CONFIGURIAMO PRIMA L'EVENTO DI ERRORE (IL PARACADUTE)
       img.onerror = function() {
         this.onerror = null; // Evita loop infiniti
         this.src = defaultImage;
       };
+      
+      // 2. SOLO ORA ASSEGNIAMO LA SORGENTE (L'ORDINE È FONDAMENTALE!)
+      img.src = (data.image && data.image.trim() !== '') ? data.image : defaultImage;
 
       placeholderImg.replaceWith(img);
     }
