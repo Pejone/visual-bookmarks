@@ -9,6 +9,7 @@ const fileInput = document.getElementById('fileInput');
 const bulkLinksInput = document.getElementById('bulkLinksInput');
 const addLinksBtn = document.getElementById('addLinksBtn');
 const bookmarksGrid = document.getElementById('bookmarksGrid');
+const clearAllBtn = document.getElementById('clearAllBtn');
 
 // Array globale per i segnalibri
 let currentBookmarks = [];
@@ -34,6 +35,25 @@ tabText.addEventListener('click', () => {
   sectionHtml.classList.add('hidden');
 });
 
+// ==========================================
+// LOGICA PER SVUOTARE I SEGNALIBRI
+// ==========================================
+clearAllBtn.addEventListener('click', () => {
+  const n = currentBookmarks.length;
+  if (n === 0) {
+    alert("Non ci sono segnalibri da cancellare!");
+    return;
+  }
+
+  const confirmClear = confirm(`Sei sicuro di voler cancellare permanentemente tutti i tuoi ${n} segnalibri? L'azione non è annullabile.`);
+
+  if (confirmClear) {
+    currentBookmarks = []; // Svuota l'array in memoria
+    localStorage.removeItem('my_bookmarks'); // Cancella i dati dal telefono
+    renderBookmarks(currentBookmarks); // Aggiorna l'interfaccia (mostrerà il messaggio "Nessun segnalibro")
+    fileInput.value = ''; // Resetta anche l'eventuale file selezionato nell'input
+  }
+});
 
 // ==========================================
 // CARICAMENTO INIZIALE E GESTIONE DATI
