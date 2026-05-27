@@ -142,7 +142,7 @@ function renderBookmarks(bookmarks) {
   bookmarksGrid.innerHTML = '';
   
   if (bookmarks.length === 0) {
-    bookmarksGrid.innerHTML = '<p class="text-center text-gray-500 col-span-full py-8">Nessun segnalibro salvato. Scegli un metodo in alto per iniziare!</p>';
+    bookmarksGrid.innerHTML = '<p class="text-center text-gray-500 col-span-full py-8">Nessun segnalibro salvato.</p>';
     return;
   }
 
@@ -157,22 +157,27 @@ function renderBookmarks(bookmarks) {
     });
   }, { rootMargin: '100px' });
 
-  bookmarks.forEach(bm => {
-    const card = document.createElement('a');
-    card.href = bm.url;
-    card.target = '_blank';
+  bookmarks.forEach((bm, index) => {
+    const card = document.createElement('div'); // Cambiato in div per contenere il tasto
+    card.className = 'relative group bookmark-card block bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700 transition hover:scale-[1.02]';
     card.dataset.url = bm.url;
-    card.className = 'bookmark-card block bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700 transition hover:scale-[1.02]';
-    
+
+    // Aggiungiamo il tasto "X" in alto a destra (si vede solo se tocchi o passi sopra)
     card.innerHTML = `
-      <div class="w-full h-40 bg-gray-700 animate-pulse flex items-center justify-center text-gray-500 text-sm placeholder-img">
-        Caricamento...
-      </div>
-      <div class="p-4">
-        <h2 class="font-semibold text-sm line-clamp-2 mb-1 bm-title">${bm.title}</h2>
-        <p class="text-xs text-gray-400 truncate">${bm.url}</p>
-        <p class="text-xs text-gray-500 line-clamp-2 mt-2 desc-text"></p>
-      </div>
+      <button class="absolute top-2 right-2 z-10 bg-red-600/80 hover:bg-red-500 text-white w-8 h-8 rounded-full shadow-lg flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 md:opacity-50" 
+              onclick="deleteBookmark(${index})">
+        ✕
+      </button>
+      <a href="${bm.url}" target="_blank" class="block">
+        <div class="w-full h-40 bg-gray-700 animate-pulse flex items-center justify-center text-gray-500 text-sm placeholder-img">
+          Caricamento...
+        </div>
+        <div class="p-4">
+          <h2 class="font-semibold text-sm line-clamp-2 mb-1 bm-title">${bm.title}</h2>
+          <p class="text-xs text-gray-400 truncate">${bm.url}</p>
+          <p class="text-xs text-gray-500 line-clamp-2 mt-2 desc-text"></p>
+        </div>
+      </a>
     `;
     
     bookmarksGrid.appendChild(card);
@@ -180,29 +185,12 @@ function renderBookmarks(bookmarks) {
   });
 }
 
-async function loadPreview(card, url) {
-  const placeholderImg = card.querySelector('.placeholder-img');
-  const descText = card.querySelector('.desc-text');
-  const titleText = card.querySelector('.bm-title');
-  
-  try {
-    const res = await fetch(`/api/preview?url=${encodeURIComponent(url)}`);
-    const data = await res.json();
-    
-    if (placeholderImg) {
-      const img = document.createElement('img');
-      img.src = data.image;
-      img.alt = data.title;
-      img.className = 'w-full h-40 object-cover';
-      placeholderImg.replaceWith(img);
-    }
-    
-    if (data.title) titleText.textContent = data.title;
-    if (data.description) descText.textContent = data.description;
-  } catch (err) {
-    if (placeholderImg) {
-      placeholderImg.textContent = 'Anteprima non disponibile';
-      placeholderImg.classList.remove('animate-pulse');
-    }
-  }
-}
+// Funzione globale per eliminare un singolo segnalibro
+window.deleteBookmark = (index) => {
+  // Rimuove il segnalibro dall'array
+  currentBookmarks.splice(index, 1);
+  // Salva il nuovo stato
+  localStorage.setItem('my_bookmarks', JSON.stringify(currentBookmarks));
+  // Ridisegna la griglia
+  renderBookmarks(currentBookmarks);
+};
