@@ -64,5 +64,14 @@
   </main>
 
   <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js?v=2')
+          .then(reg => console.log('PWA Service Worker registrato con v=2!', reg))
+          .catch(err => console.error('Errore SW:', err));
+      });
+    }
+  </script>
 </body>
 </html>
