@@ -14,6 +14,15 @@ const clearAllBtn = document.getElementById('clearAllBtn');
 // Array globale per i segnalibri
 let currentBookmarks = [];
 
+
+// Registrazione del Service Worker per la PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('Service Worker registrato con successo!', reg))
+      .catch(err => console.error('Errore nella registrazione del Service Worker:', err));
+  });
+}
 // ==========================================
 // LOGICA DELLO SWITCH (TAB CONTROLLER)
 // ==========================================
