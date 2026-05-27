@@ -12,6 +12,7 @@ const addLinksBtn = document.getElementById('addLinksBtn');
 const exportBtn = document.getElementById('exportBtn');
 const clearAllBtn = document.getElementById('clearAllBtn');
 const bookmarksGrid = document.getElementById('bookmarksGrid');
+const searchInput = document.getElementById('searchInput');
 
 // Array globale che tiene in memoria i segnalibri correnti
 let currentBookmarks = [];
@@ -273,6 +274,31 @@ async function loadPreview(card, url) {
       placeholderImg.classList.add('bg-gray-700');
     }
   }
+}
+
+// ==========================================
+// FUNZIONE DI FILTRO / RICERCA IN REAL-TIME
+// ==========================================
+if (searchInput) {
+  searchInput.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase().trim();
+    
+    // Se la barra è vuota, mostra tutto normalmente
+    if (!query) {
+      renderBookmarks(currentBookmarks);
+      return;
+    }
+    
+    // Filtriamo l'array controllando se il testo è nel titolo o nel link
+    const filtered = currentBookmarks.filter(bm => {
+      const titleMatch = bm.title ? bm.title.toLowerCase().includes(query) : false;
+      const urlMatch = bm.url ? bm.url.toLowerCase().includes(query) : false;
+      return titleMatch || urlMatch;
+    });
+    
+    // Mostriamo solo i risultati filtrati (senza toccare il localStorage!)
+    renderBookmarks(filtered);
+  });
 }
 
 // ==========================================
