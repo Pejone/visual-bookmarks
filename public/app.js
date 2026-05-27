@@ -108,7 +108,7 @@ function mergeAndSaveBookmarks(newLinks) {
   currentBookmarks = [...uniqueNewLinks, ...currentBookmarks];
   localStorage.setItem('my_bookmarks', JSON.stringify(currentBookmarks));
   
-  // Se l'utente sta cercando qualcosa, aggiorna mantenendo il filtro
+  // Se l'utente sta cercando qualcosa, aggiorna mantenendo il filtro grafico attivo
   if (searchInput && searchInput.value) {
     searchInput.dispatchEvent(new Event('input'));
   } else {
@@ -164,7 +164,7 @@ if (clearAllBtn) {
     if (confirmClear) {
       currentBookmarks = [];
       localStorage.removeItem('my_bookmarks');
-      if (searchInput) searchInput.value = ''; // Svuota l'input grafico
+      if (searchInput) searchInput.value = ''; // Svuota l'input grafico della ricerca
       renderBookmarks(currentBookmarks);
     }
   });
@@ -182,7 +182,7 @@ function renderBookmarks(bookmarks) {
     return;
   }
 
-  // OBSERVER INDIPENDENTE DAL LAYOUT (Gira sul Viewport globale)
+  // OBSERVER INDIPENDENTE DAL LAYOUT (Monitora l'intero Viewport del browser)
   const observer = new IntersectionObserver((entries, observer) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -291,7 +291,12 @@ async function loadPreview(card, url) {
     
     if (placeholderImg) {
       const img = document.createElement('img');
-      img.src = data.image || 'https://images.unsplash.com/photo-1594729187302-3c829e92ff0e?w=500&auto=format&fit=crop&q=60';
+      
+      // Controllo robusto: se data.image è indefinito, nullo o una stringa vuota, usa il fallback
+      img.src = (data.image && data.image.trim() !== '') 
+        ? data.image 
+        : 'https://images.unsplash.com/photo-1594729187302-3c829e92ff0e?w=500&auto=format&fit=crop&q=60';
+        
       img.alt = data.title || 'Anteprima';
       img.className = 'w-full h-40 object-cover';
       placeholderImg.replaceWith(img);
@@ -307,9 +312,11 @@ async function loadPreview(card, url) {
   } catch (err) {
     console.error("Errore nella generazione della preview:", err);
     if (placeholderImg) {
-      placeholderImg.textContent = 'Anteprima non disponibile';
-      placeholderImg.classList.remove('animate-pulse');
-      placeholderImg.classList.add('bg-gray-700');
+      const img = document.createElement('img');
+      img.src = 'https://images.unsplash.com/photo-1594729187302-3c829e92ff0e?w=500&auto=format&fit=crop&q=60';
+      img.alt = 'Anteprima non disponibile';
+      img.className = 'w-full h-40 object-cover';
+      placeholderImg.replaceWith(img);
     }
   }
 }
