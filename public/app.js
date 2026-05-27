@@ -177,18 +177,20 @@ function renderBookmarks(bookmarks) {
   }, { rootMargin: '100px' });
 
   bookmarks.forEach((bm) => {
-    // Generiamo l'ID al volo se l'elemento vecchio salvato in precedenza non lo possiede
     if (!bm.id) {
       bm.id = 'bm_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
     }
 
     const card = document.createElement('div');
-    card.className = 'relative group bookmark-card block bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700 transition hover:scale-[1.02]';
+    card.className = 'relative bookmark-card block bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700 transition hover:scale-[1.02]';
     card.dataset.url = bm.url;
 
+    // MODIFICA CRUCIALI NELLE CLASSI DEL BOTTONE:
+    // Rimossi 'opacity-100', 'md:opacity-0', ecc. Adesso è un blocco nativo z-50 sempre reattivo.
     card.innerHTML = `
-      <button class="btn-delete absolute top-2 right-2 z-30 bg-red-600 hover:bg-red-500 text-white w-8 h-8 rounded-full shadow-lg flex items-center justify-center transition-all opacity-100 font-bold cursor-pointer" 
-              data-id="${bm.id}">
+      <button class="btn-delete absolute top-2 right-2 z-50 bg-red-600 hover:bg-red-500 text-white w-8 h-8 rounded-full shadow-lg flex items-center justify-center font-bold text-base cursor-pointer" 
+              data-id="${bm.id}" 
+              style="touch-action: manipulation;">
         ✕
       </button>
       <a href="${bm.url}" target="_blank" class="block relative z-10">
@@ -207,25 +209,8 @@ function renderBookmarks(bookmarks) {
     observer.observe(card);
   });
 
-  // Aggiorna il localStorage con gli ID appena generati
   localStorage.setItem('my_bookmarks', JSON.stringify(currentBookmarks));
 }
-
-// Intercettiamo i click su tutta la griglia
-bookmarksGrid.addEventListener('click', (e) => {
-  const deleteBtn = e.target.closest('.btn-delete');
-  
-  if (deleteBtn) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const idDaCancellare = deleteBtn.dataset.id;
-    currentBookmarks = currentBookmarks.filter(bm => bm.id !== idDaCancellare);
-    
-    localStorage.setItem('my_bookmarks', JSON.stringify(currentBookmarks));
-    renderBookmarks(currentBookmarks);
-  }
-});
 
 // Chiamata asincrona alla serverless function di Vercel per recuperare i metadati
 async function loadPreview(card, url) {
