@@ -10,48 +10,48 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen p-4">
+<body class="bg-gray-900 text-gray-100 min-h-screen p-4 md:p-8">
 
   <header class="max-w-4xl mx-auto mb-8 bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-xl">
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold text-violet-400">Pejo Bookmarks</h1>
-      <div class="flex gap-2">
-      <button id="exportBtn" class="bg-green-900/40 hover:bg-green-700 text-green-300 hover:text-white border border-green-700/50 text-xs font-medium px-3 py-1.5 rounded-xl transition duration-200">
-         💾 Esporta HTML
-      </button>
-      <button id="clearAllBtn" class="bg-red-900/40 hover:bg-red-700 text-red-300 hover:text-white border border-red-700/50 text-xs font-medium px-3 py-1.5 rounded-xl transition duration-200">
-        🗑️ Svuota tutto
-      </button>
-    </div>
     
-    <div class="flex bg-gray-900 p-1 rounded-xl max-w-md mx-auto mb-6 border border-gray-700">
-      <button id="tabHtml" class="flex-1 py-2 text-sm font-medium rounded-lg bg-violet-600 text-white transition-all duration-200 shadow-md">
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+      <h1 class="text-3xl font-bold text-violet-400">Pejo Bookmarks</h1>
+      <div class="flex gap-2 w-full sm:w-auto justify-center">
+        <button id="exportBtn" class="flex-1 sm:flex-none bg-green-900/40 hover:bg-green-700 text-green-300 hover:text-white border border-green-700/50 text-xs font-medium px-3 py-1.5 rounded-xl transition duration-200 cursor-pointer">
+           💾 Esporta HTML
+        </button>
+        <button id="clearAllBtn" class="flex-1 sm:flex-none bg-red-900/40 hover:bg-red-700 text-red-300 hover:text-white border border-red-700/50 text-xs font-medium px-3 py-1.5 rounded-xl transition duration-200 cursor-pointer">
+          🗑️ Svuota tutto
+        </button>
+      </div>
+    </div> <div class="flex bg-gray-900 p-1 rounded-xl max-w-md mx-auto mb-6 border border-gray-700">
+      <button id="tabHtml" class="flex-1 py-2 text-sm font-medium rounded-lg bg-violet-600 text-white transition-all duration-200 shadow-md cursor-pointer">
         📄 File HTML
       </button>
-      <button id="tabText" class="flex-1 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-gray-200 transition-all duration-200">
+      <button id="tabText" class="flex-1 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-gray-200 transition-all duration-200 cursor-pointer">
         🔗 Incolla Link
       </button>
     </div>
     
     <div class="max-w-xl mx-auto">
       <div id="sectionHtml" class="space-y-2 transition-all duration-300">
-        <label class="block text-sm font-medium text-gray-300">Importa il file dei Segnalibri generato dal browser</label>
+        <label class="block text-sm font-medium text-gray-300 text-center sm:text-left">Importa il file dei Segnalibri generato dal browser</label>
         <input type="file" id="fileInput" accept=".html" class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-600 file:text-white hover:file:bg-violet-700 cursor-pointer"/>
       </div>
 
       <div id="sectionText" class="space-y-2 hidden transition-all duration-300">
-        <label class="block text-sm font-medium text-gray-300">Incolla qui il testo o i link copiati da Chrome</label>
-        <div class="flex gap-2">
+        <label class="block text-sm font-medium text-gray-300 text-center sm:text-left">Incolla qui il testo o i link copiati da Chrome</label>
+        <div class="flex flex-col sm:flex-row gap-2">
           <textarea id="bulkLinksInput" rows="1" placeholder="Trascina o incolla i tuoi link qui..." class="w-full bg-gray-900 text-sm rounded-lg border border-gray-700 p-2.5 text-gray-100 focus:ring-violet-500 focus:border-violet-500 placeholder-gray-500 resize-none"></textarea>
-          <button id="addLinksBtn" class="bg-violet-600 hover:bg-violet-700 text-white font-medium text-sm px-4 rounded-lg transition whitespace-nowrap">Aggiungi</button>
+          <button id="addLinksBtn" class="bg-violet-600 hover:bg-violet-700 text-white font-medium text-sm px-4 py-2 sm:py-0 rounded-lg transition whitespace-nowrap cursor-pointer">Aggiungi</button>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Griglia delle card -->
-  <main id="bookmarksGrid" class="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-    <!-- Le card verranno iniettate qui da JavaScript -->
+  <main class="max-w-4xl mx-auto">
+    <div id="bookmarksGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      </div>
   </main>
 
   <script src="app.js"></script>
