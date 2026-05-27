@@ -191,14 +191,13 @@ function renderBookmarks(bookmarks) {
     return;
   }
 
-  // IntersectionObserver per caricare le anteprime solo quando le card appaiono sullo schermo
   const observer = new IntersectionObserver((entries, observer) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         const card = entry.target;
         const url = card.dataset.url;
         loadPreview(card, url);
-        observer.unobserve(card); // Smette di osservare la card una volta avviato il caricamento
+        observer.unobserve(card);
       }
     });
   }, { rootMargin: '100px' });
@@ -208,13 +207,13 @@ function renderBookmarks(bookmarks) {
     card.className = 'relative group bookmark-card block bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700 transition hover:scale-[1.02]';
     card.dataset.url = bm.url;
 
-    // Struttura della card: il tasto button (X) e il tag link (A) sono fratelli dentro il contenitore DIV
+    // MODIFICA QUI: Struttura modificata per separare nettamente il tasto e impedire conflitti di click
     card.innerHTML = `
-      <button class="absolute top-2 right-2 z-10 bg-red-600/80 hover:bg-red-500 text-white w-8 h-8 rounded-full shadow-lg flex items-center justify-center transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 font-bold" 
-              onclick="deleteBookmark(${index})">
+      <button class="absolute top-2 right-2 z-30 bg-red-600 hover:bg-red-500 text-white w-8 h-8 rounded-full shadow-lg flex items-center justify-center transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 font-bold cursor-pointer" 
+              data-index="${index}">
         ✕
       </button>
-      <a href="${bm.url}" target="_blank" class="block">
+      <a href="${bm.url}" target="_blank" class="block relative z-10">
         <div class="w-full h-40 bg-gray-700 animate-pulse flex items-center justify-center text-gray-400 text-sm placeholder-img">
           Caricamento...
         </div>
@@ -226,6 +225,15 @@ function renderBookmarks(bookmarks) {
       </a>
     `;
     
+    // Agganciamo l'evento click direttamente tramite JavaScript (più sicuro su mobile rispetto a onclick)
+    const deleteBtn = card.querySelector('button');
+    deleteBtn.addEventListener('click', (e) => {
+      e.preventDefault();  // Blocca l'apertura del link di sotto
+      e.stopPropagation(); // Impedisce al click di propagarsi alla card
+      const idx = parseInt(deleteBtn.dataset.index);
+      window.deleteBookmark(idx);
+    });
+
     bookmarksGrid.appendChild(card);
     observer.observe(card);
   });
